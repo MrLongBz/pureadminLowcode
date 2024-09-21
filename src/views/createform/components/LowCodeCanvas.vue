@@ -31,6 +31,13 @@
               >
                 {{ getDefaultContent(comp.type) }}
               </component>
+              <el-upload
+                v-else
+                v-bind="comp.props"
+                :on-change="file => handleFileChange(file, comp.props.id)"
+              >
+                <el-button type="primary">点击上传</el-button>
+              </el-upload>
               <!-- ... el-upload 和 el-button 的处理保持不变 ... -->
             </el-form-item>
           </div>
@@ -73,6 +80,7 @@ export default defineComponent({
     const getDefaultLabel = (componentType: string): string => {
       const labelMap: { [key: string]: string } = {
         "el-input": "输入框",
+        "el-input-number": "数字输入框",
         "el-select": "下拉选择框",
         "el-radio": "单选框",
         "el-checkbox": "复选框",
@@ -114,6 +122,14 @@ export default defineComponent({
                   ? 0
                   : "";
         }
+
+        // 特别处理上传组件
+        if (componentType === "el-upload") {
+          defaultProps.action = "#"; // 设置一个默认的上传地址
+          defaultProps.autoUpload = false; // 默认不自动上传
+          defaultProps["on-change"] = "handleFileChange"; // 设置文件改变时的处理函数
+        }
+
         const newComponent: FormComponent = {
           type: componentType,
           props: defaultProps
@@ -178,7 +194,10 @@ export default defineComponent({
         }
       };
     };
-
+    const handleFileChange = (file: any, id: string) => {
+      console.log(`File changed for upload component ${id}:`, file);
+      // 这里可以添加文件处理逻辑
+    };
     const handleDragStart = (event: DragEvent, index: number) => {
       event.dataTransfer?.setData("text/plain", index.toString());
     };
@@ -207,6 +226,7 @@ export default defineComponent({
       getDefaultLabel,
       getDefaultContent,
       getUploadProps,
+      handleFileChange,
       formData,
       updateFormData
     };

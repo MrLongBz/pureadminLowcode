@@ -21,14 +21,25 @@
                 :span="comp.props.colSpan || 24"
               >
                 <el-form-item
-                  v-if="comp.type !== 'el-button'"
+                  v-if="comp.type !== 'el-button' && comp.type !== 'el-upload'"
                   :label="comp.props.label"
                 >
                   <component
                     :is="comp.type"
                     v-bind="comp.props"
-                    v-model="form[comp.props.id]"
+                    v-model="form[comp.props.vModel || comp.props.id]"
                   />
+                </el-form-item>
+                <el-form-item
+                  v-else-if="comp.type === 'el-upload'"
+                  :label="comp.props.label"
+                >
+                  <el-upload
+                    v-bind="comp.props"
+                    :on-change="file => handleFileChange(file, comp.props.id)"
+                  >
+                    <el-button type="primary">点击上传</el-button>
+                  </el-upload>
                 </el-form-item>
                 <el-button
                   v-else
@@ -121,6 +132,11 @@ export default defineComponent({
       // 这里可以添加按钮点击的具体逻辑
     };
 
+    const handleFileChange = (file: any, id: string) => {
+      console.log(`File changed for upload component ${id}:`, file);
+      // 这里可以添加文件处理逻辑
+    };
+
     return {
       activeTab,
       dialogVisible,
@@ -128,7 +144,8 @@ export default defineComponent({
       handleClose,
       handleCopyCode,
       form,
-      onButtonClick
+      onButtonClick,
+      handleFileChange
     };
   }
 });
@@ -151,11 +168,18 @@ function generateFormCode(
         }
       });
       code += `>${comp.props.label}</el-button>\n`;
+    } else if (comp.type === "el-upload") {
+      code += `        <el-upload`;
+      Object.entries(comp.props).forEach(([key, value]) => {
+        if (key !== "id" && key !== "colSpan") {
+          code += ` ${key}="${value}"`;
+        }
+      });
+      code += `>\n          <el-button type="primary">点击上传</el-button>\n        </el-upload>\n`;
     } else {
       code += `        <el-form-item label="${comp.props.label}">\n`;
       code += `          <${comp.type} `;
 
-      // 检查是否有 vModel 属性，如果有，使用它来生成 v-model 绑定
       if (comp.props.vModel) {
         code += `v-model="form.${comp.props.vModel}" `;
       }
